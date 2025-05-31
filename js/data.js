@@ -37,10 +37,19 @@ class ShortcutData {
 
         for (const category in this.shortcuts) {
             const categoryData = this.shortcuts[category];
-            results[category] = categoryData.items.filter(shortcut => 
-                shortcut.shortcut.toLowerCase().includes(query) ||
-                shortcut.description.toLowerCase().includes(query)
-            );
+            const categoryName = categoryData.name.toLowerCase();
+            // 카테고리명에 검색어가 포함되면 전체 아이템 반환
+            if (categoryName.includes(query)) {
+                results[category] = categoryData.items;
+                continue;
+            }
+            // 각 아이템의 shortcut, description에 대해 부분 일치 검색
+            results[category] = categoryData.items.filter(shortcut => {
+                return (
+                    shortcut.shortcut.toLowerCase().includes(query) ||
+                    shortcut.description.toLowerCase().includes(query)
+                );
+            });
         }
 
         return results;

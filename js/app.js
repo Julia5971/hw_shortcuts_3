@@ -314,6 +314,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 이벤트 리스너 설정
     searchInput.addEventListener('input', handleSearch);
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
     settingsBtn.addEventListener('click', showSettingsModal);
 
     // 오프라인 지원
