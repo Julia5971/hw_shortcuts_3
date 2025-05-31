@@ -340,4 +340,35 @@ async function initialize() {
 }
 
 // 앱 시작
-initialize(); 
+initialize();
+
+// 다크 모드 토글 기능
+const darkModeToggle = document.getElementById('darkModeToggle');
+const rootElement = document.documentElement;
+
+function setDarkMode(isDark) {
+    if (isDark) {
+        rootElement.setAttribute('data-theme', 'dark');
+        darkModeToggle.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        rootElement.removeAttribute('data-theme');
+        darkModeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+darkModeToggle.addEventListener('click', () => {
+    const isDark = rootElement.getAttribute('data-theme') !== 'dark';
+    setDarkMode(isDark);
+});
+
+// 페이지 로드 시 테마 적용
+(function() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        setDarkMode(true);
+    } else {
+        setDarkMode(false);
+    }
+})(); 
