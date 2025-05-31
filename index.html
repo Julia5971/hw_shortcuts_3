@@ -12,6 +12,15 @@
         <div class="search-container">
             <input type="text" id="search" placeholder="단축키 검색...">
         </div>
+        <div class="stats-container">
+            <div class="progress-bar">
+                <div class="progress" style="width: 0%"></div>
+            </div>
+            <div class="stats-info">
+                <span>오늘의 목표: 0/5</span>
+                <span>달성률: 0%</span>
+            </div>
+        </div>
         <div class="settings">
             <button id="settingsBtn">설정</button>
         </div>
@@ -21,7 +30,7 @@
         <aside class="sidebar">
             <nav>
                 <ul class="category-list">
-                    <li><a href="#" data-category="windows">Windows 단축키</a></li>
+                    <li><a href="#" data-category="windows" class="active">Windows 단축키</a></li>
                     <li><a href="#" data-category="chrome">Chrome 단축키</a></li>
                     <li><a href="#" data-category="vscode">VS Code 단축키</a></li>
                     <li><a href="#" data-category="photoshop">Photoshop 단축키</a></li>

@@ -2,9 +2,80 @@
 const shortcutsContainer = document.getElementById('shortcutsContainer');
 const searchInput = document.getElementById('search');
 const categoryLinks = document.querySelectorAll('.category-list a');
+const settingsBtn = document.getElementById('settingsBtn');
 
 // 현재 선택된 카테고리
 let currentCategory = 'windows';
+
+// 학습 통계 데이터
+class LearningStats {
+    constructor() {
+        this.stats = JSON.parse(localStorage.getItem('learningStats')) || {
+            total: 0,
+            learned: 0,
+            dailyGoal: 5,
+            lastUpdated: new Date().toDateString()
+        };
+    }
+
+    // 학습 상태 업데이트
+    updateStats(learned) {
+        const today = new Date().toDateString();
+        
+        // 날짜가 바뀌었으면 일일 목표 초기화
+        if (today !== this.stats.lastUpdated) {
+            this.stats.learned = 0;
+            this.stats.lastUpdated = today;
+        }
+
+        if (learned) {
+            this.stats.learned++;
+        }
+        
+        this.saveStats();
+    }
+
+    // 통계 저장
+    saveStats() {
+        localStorage.setItem('learningStats', JSON.stringify(this.stats));
+    }
+
+    // 일일 목표 설정
+    setDailyGoal(goal) {
+        this.stats.dailyGoal = goal;
+        this.saveStats();
+    }
+
+    // 진행률 계산
+    getProgress() {
+        return {
+            percentage: Math.min(100, (this.stats.learned / this.stats.dailyGoal) * 100),
+            learned: this.stats.learned,
+            goal: this.stats.dailyGoal
+        };
+    }
+}
+
+// 통계 인스턴스 생성
+const learningStats = new LearningStats();
+
+// 통계 표시 업데이트
+function updateStatsDisplay() {
+    const progress = learningStats.getProgress();
+    const statsElement = document.querySelector('.stats-container');
+    
+    if (statsElement) {
+        statsElement.innerHTML = `
+            <div class="progress-bar">
+                <div class="progress" style="width: ${progress.percentage}%"></div>
+            </div>
+            <div class="stats-info">
+                <span>오늘의 목표: ${progress.learned}/${progress.goal}</span>
+                <span>달성률: ${Math.round(progress.percentage)}%</span>
+            </div>
+        `;
+    }
+}
 
 // 단축키 카드 생성
 function createShortcutCard(shortcut) {
@@ -32,6 +103,9 @@ function createShortcutCard(shortcut) {
         const learned = e.target.checked;
         
         shortcutData.saveLearningState(category, id, learned);
+        learningStats.updateStats(learned);
+        updateStatsDisplay();
+        
         if (learned) {
             card.style.opacity = '0.5';
             setTimeout(() => card.remove(), 300);
@@ -129,14 +203,54 @@ function updateCategoryMenu() {
             e.preventDefault();
             currentCategory = category.id;
             displayShortcuts(currentCategory);
+            
+            // 활성 카테고리 표시
+            categoryLinks.forEach(link => link.classList.remove('active'));
+            e.target.classList.add('active');
         });
         li.appendChild(a);
         categoryList.appendChild(li);
     });
 }
 
+// 설정 모달 표시
+function showSettingsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h2>설정</h2>
+            <div class="setting-item">
+                <label>일일 학습 목표</label>
+                <input type="number" id="dailyGoal" min="1" max="50" value="${learningStats.stats.dailyGoal}">
+            </div>
+            <div class="modal-buttons">
+                <button id="saveSettings">저장</button>
+                <button id="closeModal">닫기</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 이벤트 리스너
+    document.getElementById('saveSettings').addEventListener('click', () => {
+        const goal = parseInt(document.getElementById('dailyGoal').value);
+        if (goal > 0) {
+            learningStats.setDailyGoal(goal);
+            updateStatsDisplay();
+        }
+        modal.remove();
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+        modal.remove();
+    });
+}
+
 // 이벤트 리스너 설정
 searchInput.addEventListener('input', handleSearch);
+settingsBtn.addEventListener('click', showSettingsModal);
 
 // 초기화
 async function initialize() {
@@ -144,6 +258,7 @@ async function initialize() {
         await shortcutData.loadData();
         updateCategoryMenu();
         displayShortcuts(currentCategory);
+        updateStatsDisplay();
     } catch (error) {
         console.error('초기화 실패:', error);
     }
