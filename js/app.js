@@ -7,6 +7,19 @@ const settingsBtn = document.getElementById('settingsBtn');
 // 현재 선택된 카테고리
 let currentCategory = 'windows';
 
+// 디바운스 함수
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // 학습 통계 데이터
 class LearningStats {
     constructor() {
@@ -37,13 +50,26 @@ class LearningStats {
 
     // 통계 저장
     saveStats() {
-        localStorage.setItem('learningStats', JSON.stringify(this.stats));
+        try {
+            localStorage.setItem('learningStats', JSON.stringify(this.stats));
+        } catch (error) {
+            console.error('통계 저장 실패:', error);
+            // 로컬 스토리지 용량 초과 시 이전 데이터 삭제
+            if (error.name === 'QuotaExceededError') {
+                localStorage.clear();
+                this.saveStats();
+            }
+        }
     }
 
     // 일일 목표 설정
     setDailyGoal(goal) {
-        this.stats.dailyGoal = goal;
-        this.saveStats();
+        if (goal > 0 && goal <= 50) {
+            this.stats.dailyGoal = goal;
+            this.saveStats();
+            return true;
+        }
+        return false;
     }
 
     // 진행률 계산
@@ -102,13 +128,18 @@ function createShortcutCard(shortcut) {
         const id = e.target.dataset.id;
         const learned = e.target.checked;
         
-        shortcutData.saveLearningState(category, id, learned);
-        learningStats.updateStats(learned);
-        updateStatsDisplay();
-        
-        if (learned) {
-            card.style.opacity = '0.5';
-            setTimeout(() => card.remove(), 300);
+        try {
+            shortcutData.saveLearningState(category, id, learned);
+            learningStats.updateStats(learned);
+            updateStatsDisplay();
+            
+            if (learned) {
+                card.style.opacity = '0.5';
+                setTimeout(() => card.remove(), 300);
+            }
+        } catch (error) {
+            console.error('학습 상태 업데이트 실패:', error);
+            e.target.checked = !learned; // 체크박스 상태 되돌리기
         }
     });
 
@@ -121,96 +152,119 @@ async function displayShortcuts(category) {
         const shortcuts = shortcutData.getShortcutsByCategory(category);
         const categoryInfo = shortcutData.getCategoryInfo(category);
         
+        // DocumentFragment 사용하여 DOM 조작 최적화
+        const fragment = document.createDocumentFragment();
+        
         // 카테고리 제목 추가
         const categoryTitle = document.createElement('h2');
         categoryTitle.className = 'category-title';
         categoryTitle.textContent = categoryInfo.name;
-        
-        shortcutsContainer.innerHTML = '';
-        shortcutsContainer.appendChild(categoryTitle);
+        fragment.appendChild(categoryTitle);
         
         // 단축키 카드 추가
+        let hasShortcuts = false;
         shortcuts.forEach(shortcut => {
             if (!shortcutData.getLearningState(shortcut.category, shortcut.id)) {
                 const card = createShortcutCard(shortcut);
-                shortcutsContainer.appendChild(card);
+                fragment.appendChild(card);
+                hasShortcuts = true;
             }
         });
 
         // 학습된 단축키가 없는 경우 메시지 표시
-        if (shortcutsContainer.children.length === 1) {
+        if (!hasShortcuts) {
             const message = document.createElement('p');
             message.className = 'no-shortcuts';
             message.textContent = '모든 단축키를 학습했습니다!';
-            shortcutsContainer.appendChild(message);
+            fragment.appendChild(message);
         }
+
+        // 컨테이너 내용 교체
+        shortcutsContainer.innerHTML = '';
+        shortcutsContainer.appendChild(fragment);
     } catch (error) {
         console.error('단축키 표시 실패:', error);
+        shortcutsContainer.innerHTML = '<p class="no-shortcuts">단축키를 불러오는 중 오류가 발생했습니다.</p>';
     }
 }
 
 // 검색 기능
-function handleSearch() {
+const handleSearch = debounce(() => {
     const query = searchInput.value.trim();
     if (query === '') {
         displayShortcuts(currentCategory);
         return;
     }
 
-    const results = shortcutData.searchShortcuts(query);
-    shortcutsContainer.innerHTML = '';
+    try {
+        const results = shortcutData.searchShortcuts(query);
+        const fragment = document.createDocumentFragment();
+        let hasResults = false;
 
-    let hasResults = false;
-    for (const category in results) {
-        if (results[category].length > 0) {
-            const categoryInfo = shortcutData.getCategoryInfo(category);
-            const categoryTitle = document.createElement('h2');
-            categoryTitle.className = 'category-title';
-            categoryTitle.textContent = categoryInfo.name;
-            shortcutsContainer.appendChild(categoryTitle);
+        for (const category in results) {
+            if (results[category].length > 0) {
+                const categoryInfo = shortcutData.getCategoryInfo(category);
+                const categoryTitle = document.createElement('h2');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = categoryInfo.name;
+                fragment.appendChild(categoryTitle);
 
-            results[category].forEach(shortcut => {
-                if (!shortcutData.getLearningState(shortcut.category, shortcut.id)) {
-                    const card = createShortcutCard(shortcut);
-                    shortcutsContainer.appendChild(card);
-                    hasResults = true;
-                }
-            });
+                results[category].forEach(shortcut => {
+                    if (!shortcutData.getLearningState(shortcut.category, shortcut.id)) {
+                        const card = createShortcutCard(shortcut);
+                        fragment.appendChild(card);
+                        hasResults = true;
+                    }
+                });
+            }
         }
-    }
 
-    if (!hasResults) {
-        const message = document.createElement('p');
-        message.className = 'no-results';
-        message.textContent = '검색 결과가 없습니다.';
-        shortcutsContainer.appendChild(message);
+        if (!hasResults) {
+            const message = document.createElement('p');
+            message.className = 'no-results';
+            message.textContent = '검색 결과가 없습니다.';
+            fragment.appendChild(message);
+        }
+
+        shortcutsContainer.innerHTML = '';
+        shortcutsContainer.appendChild(fragment);
+    } catch (error) {
+        console.error('검색 실패:', error);
+        shortcutsContainer.innerHTML = '<p class="no-results">검색 중 오류가 발생했습니다.</p>';
     }
-}
+}, 300);
 
 // 카테고리 메뉴 업데이트
 function updateCategoryMenu() {
-    const categories = shortcutData.getAllCategories();
-    const categoryList = document.querySelector('.category-list');
-    categoryList.innerHTML = '';
+    try {
+        const categories = shortcutData.getAllCategories();
+        const categoryList = document.querySelector('.category-list');
+        const fragment = document.createDocumentFragment();
 
-    categories.forEach(category => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = '#';
-        a.dataset.category = category.id;
-        a.textContent = category.name;
-        a.addEventListener('click', (e) => {
-            e.preventDefault();
-            currentCategory = category.id;
-            displayShortcuts(currentCategory);
-            
-            // 활성 카테고리 표시
-            categoryLinks.forEach(link => link.classList.remove('active'));
-            e.target.classList.add('active');
+        categories.forEach(category => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#';
+            a.dataset.category = category.id;
+            a.textContent = category.name;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentCategory = category.id;
+                displayShortcuts(currentCategory);
+                
+                // 활성 카테고리 표시
+                categoryLinks.forEach(link => link.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+            li.appendChild(a);
+            fragment.appendChild(li);
         });
-        li.appendChild(a);
-        categoryList.appendChild(li);
-    });
+
+        categoryList.innerHTML = '';
+        categoryList.appendChild(fragment);
+    } catch (error) {
+        console.error('카테고리 메뉴 업데이트 실패:', error);
+    }
 }
 
 // 설정 모달 표시
@@ -221,7 +275,7 @@ function showSettingsModal() {
         <div class="modal-content">
             <h2>설정</h2>
             <div class="setting-item">
-                <label>일일 학습 목표</label>
+                <label>일일 학습 목표 (1-50)</label>
                 <input type="number" id="dailyGoal" min="1" max="50" value="${learningStats.stats.dailyGoal}">
             </div>
             <div class="modal-buttons">
@@ -236,21 +290,41 @@ function showSettingsModal() {
     // 이벤트 리스너
     document.getElementById('saveSettings').addEventListener('click', () => {
         const goal = parseInt(document.getElementById('dailyGoal').value);
-        if (goal > 0) {
-            learningStats.setDailyGoal(goal);
+        if (learningStats.setDailyGoal(goal)) {
             updateStatsDisplay();
+            modal.remove();
+        } else {
+            alert('1에서 50 사이의 숫자를 입력해주세요.');
         }
-        modal.remove();
     });
 
     document.getElementById('closeModal').addEventListener('click', () => {
         modal.remove();
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function closeModalOnEsc(e) {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', closeModalOnEsc);
+        }
     });
 }
 
 // 이벤트 리스너 설정
 searchInput.addEventListener('input', handleSearch);
 settingsBtn.addEventListener('click', showSettingsModal);
+
+// 오프라인 지원
+window.addEventListener('online', () => {
+    console.log('온라인 상태로 복귀');
+    initialize();
+});
+
+window.addEventListener('offline', () => {
+    console.log('오프라인 상태');
+    shortcutsContainer.innerHTML = '<p class="no-shortcuts">오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.</p>';
+});
 
 // 초기화
 async function initialize() {
@@ -261,8 +335,10 @@ async function initialize() {
         updateStatsDisplay();
     } catch (error) {
         console.error('초기화 실패:', error);
+        shortcutsContainer.innerHTML = '<p class="no-shortcuts">데이터를 불러오는 중 오류가 발생했습니다.</p>';
     }
 }
 
 // 앱 시작
+initialize(); 
 initialize(); 
