@@ -8,7 +8,7 @@ class ShortcutData {
     // 데이터 로드
     async loadData() {
         try {
-            const response = await fetch('../data/shortcuts.json');
+            const response = await fetch('data/shortcuts.json');
             this.shortcuts = await response.json();
             this.loaded = true;
             return this.shortcuts;
@@ -23,7 +23,7 @@ class ShortcutData {
         if (!this.loaded) {
             throw new Error('데이터가 로드되지 않았습니다.');
         }
-        return this.shortcuts[category] || [];
+        return this.shortcuts[category]?.items || [];
     }
 
     // 검색어로 단축키 검색
@@ -36,7 +36,8 @@ class ShortcutData {
         const results = {};
 
         for (const category in this.shortcuts) {
-            results[category] = this.shortcuts[category].filter(shortcut => 
+            const categoryData = this.shortcuts[category];
+            results[category] = categoryData.items.filter(shortcut => 
                 shortcut.shortcut.toLowerCase().includes(query) ||
                 shortcut.description.toLowerCase().includes(query)
             );
@@ -55,6 +56,25 @@ class ShortcutData {
     getLearningState(categoryId, shortcutId) {
         const key = `shortcut_${categoryId}_${shortcutId}`;
         return localStorage.getItem(key) === 'true';
+    }
+
+    // 카테고리 정보 가져오기
+    getCategoryInfo(category) {
+        if (!this.loaded) {
+            throw new Error('데이터가 로드되지 않았습니다.');
+        }
+        return this.shortcuts[category] || null;
+    }
+
+    // 모든 카테고리 정보 가져오기
+    getAllCategories() {
+        if (!this.loaded) {
+            throw new Error('데이터가 로드되지 않았습니다.');
+        }
+        return Object.values(this.shortcuts).map(category => ({
+            id: category.id,
+            name: category.name
+        }));
     }
 }
 

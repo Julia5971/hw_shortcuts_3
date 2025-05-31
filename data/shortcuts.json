@@ -1,95 +1,166 @@
 {
-  "categories": [
-    {
-      "id": "windows",
-      "name": "Windows Shortcuts",
-      "description": "Windows 운영체제 기본 단축키",
-      "items": [
-        {
-          "id": "win-001",
-          "shortcut": "Ctrl + C",
-          "description": "선택한 항목 복사",
-          "category": "기본",
-          "learned": false
-        },
-        {
-          "id": "win-002",
-          "shortcut": "Ctrl + V",
-          "description": "복사한 항목 붙여넣기",
-          "category": "기본",
-          "learned": false
-        },
-        {
-          "id": "win-003",
-          "shortcut": "Alt + Tab",
-          "description": "열린 창 간 전환",
-          "category": "창 관리",
-          "learned": false
-        }
-      ]
-    },
-    {
-      "id": "chrome",
-      "name": "Chrome Shortcuts",
-      "description": "Chrome 브라우저 개발자 도구 단축키",
-      "items": [
-        {
-          "id": "chrome-001",
-          "shortcut": "F12",
-          "description": "개발자 도구 열기",
-          "category": "개발자 도구",
-          "learned": false
-        },
-        {
-          "id": "chrome-002",
-          "shortcut": "Ctrl + Shift + I",
-          "description": "개발자 도구 열기",
-          "category": "개발자 도구",
-          "learned": false
-        }
-      ]
-    },
-    {
-      "id": "vscode",
-      "name": "VS Code Shortcuts",
-      "description": "Visual Studio Code 편집기 단축키",
-      "items": [
-        {
-          "id": "vscode-001",
-          "shortcut": "Ctrl + S",
-          "description": "파일 저장",
-          "category": "기본",
-          "learned": false
-        },
-        {
-          "id": "vscode-002",
-          "shortcut": "Ctrl + F",
-          "description": "파일 내 검색",
-          "category": "검색",
-          "learned": false
-        }
-      ]
-    },
-    {
-      "id": "photoshop",
-      "name": "Photoshop Shortcuts",
-      "description": "Adobe Photoshop 단축키",
-      "items": [
-        {
-          "id": "ps-001",
-          "shortcut": "Ctrl + Z",
-          "description": "실행 취소",
-          "category": "편집",
-          "learned": false
-        },
-        {
-          "id": "ps-002",
-          "shortcut": "Ctrl + J",
-          "description": "레이어 복제",
-          "category": "레이어",
-          "learned": false
-        }
-      ]
-    }
-  ]
+  "windows": {
+    "id": "windows",
+    "name": "Windows 단축키",
+    "items": [
+      {
+        "id": "win_1",
+        "shortcut": "Win + E",
+        "description": "파일 탐색기 열기",
+        "category": "windows",
+        "learned": false
+      },
+      {
+        "id": "win_2",
+        "shortcut": "Win + D",
+        "description": "바탕화면 보기/숨기기",
+        "category": "windows",
+        "learned": false
+      },
+      {
+        "id": "win_3",
+        "shortcut": "Win + L",
+        "description": "화면 잠금",
+        "category": "windows",
+        "learned": false
+      },
+      {
+        "id": "win_4",
+        "shortcut": "Win + Tab",
+        "description": "작업 보기",
+        "category": "windows",
+        "learned": false
+      },
+      {
+        "id": "win_5",
+        "shortcut": "Win + Shift + S",
+        "description": "스크린샷 도구",
+        "category": "windows",
+        "learned": false
+      }
+    ]
+  },
+  "chrome": {
+    "id": "chrome",
+    "name": "Chrome 단축키",
+    "items": [
+      {
+        "id": "chrome_1",
+        "shortcut": "Ctrl + T",
+        "description": "새 탭 열기",
+        "category": "chrome",
+        "learned": false
+      },
+      {
+        "id": "chrome_2",
+        "shortcut": "Ctrl + W",
+        "description": "현재 탭 닫기",
+        "category": "chrome",
+        "learned": false
+      },
+      {
+        "id": "chrome_3",
+        "shortcut": "Ctrl + Shift + T",
+        "description": "닫은 탭 다시 열기",
+        "category": "chrome",
+        "learned": false
+      },
+      {
+        "id": "chrome_4",
+        "shortcut": "Ctrl + L",
+        "description": "주소창으로 이동",
+        "category": "chrome",
+        "learned": false
+      },
+      {
+        "id": "chrome_5",
+        "shortcut": "Ctrl + Shift + N",
+        "description": "시크릿 모드 창 열기",
+        "category": "chrome",
+        "learned": false
+      }
+    ]
+  },
+  "vscode": {
+    "id": "vscode",
+    "name": "VS Code 단축키",
+    "items": [
+      {
+        "id": "vscode_1",
+        "shortcut": "Ctrl + S",
+        "description": "파일 저장",
+        "category": "vscode",
+        "learned": false
+      },
+      {
+        "id": "vscode_2",
+        "shortcut": "Ctrl + /",
+        "description": "주석 처리/해제",
+        "category": "vscode",
+        "learned": false
+      },
+      {
+        "id": "vscode_3",
+        "shortcut": "Ctrl + F",
+        "description": "찾기",
+        "category": "vscode",
+        "learned": false
+      },
+      {
+        "id": "vscode_4",
+        "shortcut": "Ctrl + H",
+        "description": "바꾸기",
+        "category": "vscode",
+        "learned": false
+      },
+      {
+        "id": "vscode_5",
+        "shortcut": "F5",
+        "description": "디버깅 시작",
+        "category": "vscode",
+        "learned": false
+      }
+    ]
+  },
+  "photoshop": {
+    "id": "photoshop",
+    "name": "Photoshop 단축키",
+    "items": [
+      {
+        "id": "ps_1",
+        "shortcut": "Ctrl + Z",
+        "description": "실행 취소",
+        "category": "photoshop",
+        "learned": false
+      },
+      {
+        "id": "ps_2",
+        "shortcut": "Ctrl + Alt + Z",
+        "description": "여러 단계 실행 취소",
+        "category": "photoshop",
+        "learned": false
+      },
+      {
+        "id": "ps_3",
+        "shortcut": "Ctrl + J",
+        "description": "레이어 복제",
+        "category": "photoshop",
+        "learned": false
+      },
+      {
+        "id": "ps_4",
+        "shortcut": "Ctrl + T",
+        "description": "자유 변형",
+        "category": "photoshop",
+        "learned": false
+      },
+      {
+        "id": "ps_5",
+        "shortcut": "Ctrl + Shift + I",
+        "description": "선택 영역 반전",
+        "category": "photoshop",
+        "learned": false
+      }
+    ]
+  }
 } 

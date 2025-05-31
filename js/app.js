@@ -45,14 +45,31 @@ function createShortcutCard(shortcut) {
 async function displayShortcuts(category) {
     try {
         const shortcuts = shortcutData.getShortcutsByCategory(category);
-        shortcutsContainer.innerHTML = '';
+        const categoryInfo = shortcutData.getCategoryInfo(category);
         
+        // 카테고리 제목 추가
+        const categoryTitle = document.createElement('h2');
+        categoryTitle.className = 'category-title';
+        categoryTitle.textContent = categoryInfo.name;
+        
+        shortcutsContainer.innerHTML = '';
+        shortcutsContainer.appendChild(categoryTitle);
+        
+        // 단축키 카드 추가
         shortcuts.forEach(shortcut => {
             if (!shortcutData.getLearningState(shortcut.category, shortcut.id)) {
                 const card = createShortcutCard(shortcut);
                 shortcutsContainer.appendChild(card);
             }
         });
+
+        // 학습된 단축키가 없는 경우 메시지 표시
+        if (shortcutsContainer.children.length === 1) {
+            const message = document.createElement('p');
+            message.className = 'no-shortcuts';
+            message.textContent = '모든 단축키를 학습했습니다!';
+            shortcutsContainer.appendChild(message);
+        }
     } catch (error) {
         console.error('단축키 표시 실패:', error);
     }
@@ -69,31 +86,63 @@ function handleSearch() {
     const results = shortcutData.searchShortcuts(query);
     shortcutsContainer.innerHTML = '';
 
+    let hasResults = false;
     for (const category in results) {
-        results[category].forEach(shortcut => {
-            if (!shortcutData.getLearningState(shortcut.category, shortcut.id)) {
-                const card = createShortcutCard(shortcut);
-                shortcutsContainer.appendChild(card);
-            }
-        });
+        if (results[category].length > 0) {
+            const categoryInfo = shortcutData.getCategoryInfo(category);
+            const categoryTitle = document.createElement('h2');
+            categoryTitle.className = 'category-title';
+            categoryTitle.textContent = categoryInfo.name;
+            shortcutsContainer.appendChild(categoryTitle);
+
+            results[category].forEach(shortcut => {
+                if (!shortcutData.getLearningState(shortcut.category, shortcut.id)) {
+                    const card = createShortcutCard(shortcut);
+                    shortcutsContainer.appendChild(card);
+                    hasResults = true;
+                }
+            });
+        }
+    }
+
+    if (!hasResults) {
+        const message = document.createElement('p');
+        message.className = 'no-results';
+        message.textContent = '검색 결과가 없습니다.';
+        shortcutsContainer.appendChild(message);
     }
 }
 
-// 이벤트 리스너 설정
-categoryLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        currentCategory = e.target.dataset.category;
-        displayShortcuts(currentCategory);
-    });
-});
+// 카테고리 메뉴 업데이트
+function updateCategoryMenu() {
+    const categories = shortcutData.getAllCategories();
+    const categoryList = document.querySelector('.category-list');
+    categoryList.innerHTML = '';
 
+    categories.forEach(category => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#';
+        a.dataset.category = category.id;
+        a.textContent = category.name;
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentCategory = category.id;
+            displayShortcuts(currentCategory);
+        });
+        li.appendChild(a);
+        categoryList.appendChild(li);
+    });
+}
+
+// 이벤트 리스너 설정
 searchInput.addEventListener('input', handleSearch);
 
 // 초기화
 async function initialize() {
     try {
         await shortcutData.loadData();
+        updateCategoryMenu();
         displayShortcuts(currentCategory);
     } catch (error) {
         console.error('초기화 실패:', error);
