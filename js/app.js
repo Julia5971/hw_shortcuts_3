@@ -341,4 +341,3 @@ async function initialize() {
 
 // 앱 시작
 initialize(); 
-initialize(); 
